@@ -1,0 +1,157 @@
+---
+title: "Practical Machine Learning_Project Assignment"
+author: "Mokolade Fadeyibi"
+date: "10/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(fig.align = 'center')
+```
+
+
+## Overview
+This report is the final course project for the Practical Machine Learning Module. The machine learning code in this report is further applied to 20 test cases in the test dataset for the purpose of prediction.
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Data Loading and Processing
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+First we set the working directory:
+
+```{r wd}
+setwd("~/Documents/R_files/Course 8")
+```
+
+The R libraries required for the analysis were then loaded into the R environment:
+
+```{r libraries}
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(corrplot)
+set.seed(121212)
+```
+
+Source data was downloaded and loaded:
+
+```{r data download}
+trainingdata <- read.csv("pml-training.csv", na.strings = c("NA", ""))
+testdata <- read.csv("pml-testing.csv", na.strings = c("NA", ""))
+```
+
+Next, we partition the training set:
+
+```{r partition}
+inTrain  <- createDataPartition(trainingdata$classe, p=0.7, list=FALSE)
+TrainSet <- trainingdata[inTrain, ]
+TestSet  <- trainingdata[-inTrain, ]
+dim(TrainSet)
+dim(TestSet)
+```
+
+There are quite a number of missing values in the data. For example, examining the 12th column for NAs:
+
+```{r NA inspection}
+sum(is.na(TrainSet[,12]))
+```
+
+These will be removed and cleaned as below:
+
+```{r NA removal}
+NZV <- nearZeroVar(TrainSet)
+TrainSet <- TrainSet[, -NZV]
+TestSet  <- TestSet[, -NZV]
+
+NAvalues    <- sapply(TrainSet, function(x) mean(is.na(x))) > 0.95
+TrainSet <- TrainSet[, NAvalues==FALSE]
+TestSet  <- TestSet[, NAvalues==FALSE]
+
+TrainSet <- TrainSet[, -(1:5)]
+TestSet  <- TestSet[, -(1:5)]
+dim(TrainSet)
+```
+
+After cleaning, we're left with 54 variables in the Train set.
+
+```{r dim TestSet}
+dim(TestSet)
+```
+
+Similarly, the Test set has 54 variables after cleaning.
+
+## Corelation Analysis
+
+We'll perform a corelation analysis on the data:
+
+```{r Corr Analysis}
+corMatrix <- cor(TrainSet[, -54])
+corrplot(corMatrix, order = "hclust" , type = "lower",tl.cex = 0.6)
+```
+
+The image shows the level of correlation between the variables. Variables with high positive correlation are indicated by a dark blue colour while those with high negative correlation are denoted by a dark red colour.
+
+## Prediction Model
+Two prediction models will be utilized. These are i) Decision Tree and ii) Random Forest.
+
+### a) Decision Tree
+
+```{r Decision Tree Training, message=FALSE, warning=FALSE}
+set.seed(121212)
+DecTreeFit <- rpart(classe ~ ., data=TrainSet, method="class")
+fancyRpartPlot(DecTreeFit)
+```
+
+```{r Decision Tree Testing}
+DecTreePrediction <- predict(DecTreeFit, newdata=TestSet, type="class")
+DecTreeConfMat <- confusionMatrix(DecTreePrediction, TestSet$classe)
+DecTreeConfMat
+```
+
+This model has an accuracy of 72.3%.
+
+### b) Random Forest
+
+```{r Random Forest Training}
+set.seed(121212)
+ctrlRF <- trainControl(method="cv", number=3, verboseIter=FALSE)
+RandForestFit <- train(classe ~ ., data=TrainSet, method="rf", trControl=ctrlRF)
+RandForestFit$finalModel
+```
+
+```{r Random Forest Testing}
+RandForestPrediction <- predict(RandForestFit, newdata=TestSet)
+RandForestConfMat <- confusionMatrix(RandForestPrediction, TestSet$classe)
+RandForestConfMat
+```
+
+This model has an accuracy rate of 99.7%.
+
+Therefore, the Random Forest model will be applied to our Test Data for prediction.
+
+## Project Prediction Quiz
+
+```{r Quiz Prediction}
+predictTESTdata <- predict(RandForestFit, newdata=testdata)
+predictTESTdata
+```
+
+
+
+
+
+
+
+
