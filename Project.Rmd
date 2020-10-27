@@ -1,8 +1,10 @@
 ---
 title: "Practical Machine Learning_Project Assignment"
 author: "Mokolade Fadeyibi"
-date: "10/26/2020"
-output: html_document
+date: "10/27/2020"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -52,7 +54,7 @@ trainingdata <- read.csv("pml-training.csv", na.strings = c("NA", ""))
 testdata <- read.csv("pml-testing.csv", na.strings = c("NA", ""))
 ```
 
-Next, we partition the training set:
+For the purpose of model building and cross validation, the training data is partitioned into two: Train set, which contains 70% of the data; and Test set, with 30% of the data.
 
 ```{r partition}
 inTrain  <- createDataPartition(trainingdata$classe, p=0.7, list=FALSE)
@@ -94,17 +96,19 @@ Similarly, the Test set has 54 variables after cleaning.
 
 ## Corelation Analysis
 
-We'll perform a corelation analysis on the data:
+A corelation analysis was performed on the data:
 
-```{r Corr Analysis}
+```{r Corr Analysis, eval=FALSE}
 corMatrix <- cor(TrainSet[, -54])
 corrplot(corMatrix, order = "hclust" , type = "lower",tl.cex = 0.6)
 ```
 
-The image shows the level of correlation between the variables. Variables with high positive correlation are indicated by a dark blue colour while those with high negative correlation are denoted by a dark red colour.
+The plot is not shown in this write up due to size restrictions on github. However, the result of the correlation plot shows the level of relationship between the variables. Variables with high positive correlation are indicated by a dark blue colour while those with high negative correlation are denoted by a dark red colour.
 
-## Prediction Model
-Two prediction models will be utilized. These are i) Decision Tree and ii) Random Forest.
+## Prediction Model Building
+Our original Training data was earlier partitioned into a Train set and a Test set. The Train set will be applied to our prediction model algorithm, which will then be cross validated with the Test set.
+
+Two prediction models will be utilized to build the algorithm for the Train set. These are i) Decision Tree and ii) Random Forest. The prediction model with the higher accuracy will then be used to predict the Test data.
 
 ### a) Decision Tree
 
@@ -113,6 +117,8 @@ set.seed(121212)
 DecTreeFit <- rpart(classe ~ ., data=TrainSet, method="class")
 fancyRpartPlot(DecTreeFit)
 ```
+
+### Cross Validation (Using Test Set)
 
 ```{r Decision Tree Testing}
 DecTreePrediction <- predict(DecTreeFit, newdata=TestSet, type="class")
@@ -124,12 +130,14 @@ This model has an accuracy of 72.3%.
 
 ### b) Random Forest
 
-```{r Random Forest Training}
+```{r Random Forest Training, cache=TRUE}
 set.seed(121212)
 ctrlRF <- trainControl(method="cv", number=3, verboseIter=FALSE)
 RandForestFit <- train(classe ~ ., data=TrainSet, method="rf", trControl=ctrlRF)
 RandForestFit$finalModel
 ```
+
+### Cross Validation (Using Test Set)
 
 ```{r Random Forest Testing}
 RandForestPrediction <- predict(RandForestFit, newdata=TestSet)
@@ -139,19 +147,17 @@ RandForestConfMat
 
 This model has an accuracy rate of 99.7%.
 
-Therefore, the Random Forest model will be applied to our Test Data for prediction.
+Therefore, the Random Forest model will be applied to our Test data for prediction.
+
+## Out of Sample Error
+From the above results, the Random Forest model has the lower out-of-sample error of 0.3%. This validates our selection of this model for use in predicting our Test data.
 
 ## Project Prediction Quiz
+The Random Forest model will now be applied to the Test data:
 
 ```{r Quiz Prediction}
 predictTESTdata <- predict(RandForestFit, newdata=testdata)
 predictTESTdata
 ```
-
-
-
-
-
-
 
 
