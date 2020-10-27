@@ -108,7 +108,10 @@ The plot shows the level of relationship between the variables. Variables with h
 ## Prediction Model Building
 Our original Training data was earlier partitioned into a Train set and a Test set. The Train set will be applied to our prediction model algorithm, which will then be cross validated with the Test set.
 
-Two prediction models will be utilized to build the algorithm for the Train set. These are i) Decision Tree and ii) Random Forest. The prediction model with the higher accuracy will then be used to predict the Test data.
+### Out of Sample Error Estimation
+We typically expect to have a low out of sample error in order to have an accurate algorithm. An out of sample error of less than one percent (1%) will be acceptable for the purpose of predicting our Test data. 
+
+We will therefore utilize two prediction models to build the algorithm for the Train set. These are i) Decision Tree and ii) Random Forest. The out of sample error of both models will be checked by **cross-validation** with the test set. The prediction model with the higher accuracy (and lower out of sample error) will then be used to predict the Test data.
 
 ### a) Decision Tree
 
