@@ -98,12 +98,12 @@ Similarly, the Test set has 54 variables after cleaning.
 
 A corelation analysis was performed on the data:
 
-```{r Corr Analysis, eval=FALSE}
+```{r Corr Analysis}
 corMatrix <- cor(TrainSet[, -54])
 corrplot(corMatrix, order = "hclust" , type = "lower",tl.cex = 0.6)
 ```
 
-The plot is not shown in this write up due to size restrictions on github. However, the result of the correlation plot shows the level of relationship between the variables. Variables with high positive correlation are indicated by a dark blue colour while those with high negative correlation are denoted by a dark red colour.
+The plot shows the level of relationship between the variables. Variables with high positive correlation are indicated by a dark blue colour while those with high negative correlation are denoted by a dark red colour.
 
 ## Prediction Model Building
 Our original Training data was earlier partitioned into a Train set and a Test set. The Train set will be applied to our prediction model algorithm, which will then be cross validated with the Test set.
